@@ -1,22 +1,23 @@
 steps:
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/client:latest', '-f', './client/Dockerfile', './client']
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/client:latest', '-f', './client/Dockerfile', './client']
 
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/server:latest', '-f', './server/Dockerfile', './server']
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/server:latest', '-f', './server/Dockerfile', './server']
 
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/client:latest']
+    args: ['push', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/client:latest']
 
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/server:latest']
+    args: ['push', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/server:latest']
 
 images:
-  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/client:latest'
-  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/server:latest'
+  - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/client:latest'
+  - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/server:latest'
 
 serviceAccount: github-cicd@chatverse-475212.iam.gserviceaccount.com
 
 substitutions:
+  _PROJECT_ID: chatverse-475212
   _REGION: global
   _REPO: chatverse-docker-repo   # your Artifact Registry repo name
