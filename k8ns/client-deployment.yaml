@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatverse-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chatverse-client
+  template:
+    metadata:
+      labels:
+        app: chatverse-client
+    spec:
+      containers:
+        - name: client
+          image: chatverse-client:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          envFrom:
+            - secretRef:
+                name: chatverse-client-secret
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatverse-client
+spec:
+  selector:
+    app: chatverse-client
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+

@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatverse-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chatverse-server
+  template:
+    metadata:
+      labels:
+        app: chatverse-server
+    spec:
+      containers:
+        - name: server
+          image: chatverse-server:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+          env:
+            - name: PORT
+              value: "8081"
+          envFrom:
+            - secretRef:
+                name: chatverse-server-secret
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8081
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8081
+            initialDelaySeconds: 20
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatverse-server
+spec:
+  selector:
+    app: chatverse-server
+  ports:
+    - name: http
+      port: 4000
+      targetPort: 8081
+  type: ClusterIP
+
