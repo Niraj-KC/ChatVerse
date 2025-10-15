@@ -1,3 +1,8 @@
+substitutions:
+  _PROJECT_ID: chatverse-475212
+  _REGION: asia-south1
+  _REPO: chatverse-docker-repo   # your Artifact Registry repo name
+
 steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/client:latest', '-f', './client/Dockerfile', './client']
@@ -17,7 +22,3 @@ images:
 
 serviceAccount: github-cicd@chatverse-475212.iam.gserviceaccount.com
 
-substitutions:
-  _PROJECT_ID: chatverse-475212
-  _REGION: asia-south1
-  _REPO: chatverse-docker-repo   # your Artifact Registry repo name
