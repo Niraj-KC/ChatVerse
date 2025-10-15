@@ -20,5 +20,4 @@ images:
   - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/client:latest'
   - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/server:latest'
 
-serviceAccount: github-cicd@chatverse-475212.iam.gserviceaccount.com
 
