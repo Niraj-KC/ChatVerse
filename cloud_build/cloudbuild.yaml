@@ -1,0 +1,20 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/client:latest', '-f', './client/Dockerfile', './client']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/server:latest', '-f', './server/Dockerfile', './server']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/client:latest']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/server:latest']
+
+images:
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/client:latest'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/server:latest'
+
+substitutions:
+  _REGION=global
+  _REPO=chatverse-docker-repo   # your Artifact Registry repo name
