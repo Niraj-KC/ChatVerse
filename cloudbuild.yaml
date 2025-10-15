@@ -19,5 +19,5 @@ serviceAccount: github-cicd@chatverse-475212.iam.gserviceaccount.com
 
 substitutions:
   _PROJECT_ID: chatverse-475212
-  _REGION: global
+  _REGION: asia-south1
   _REPO: chatverse-docker-repo   # your Artifact Registry repo name
