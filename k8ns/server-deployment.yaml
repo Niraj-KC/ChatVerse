@@ -16,7 +16,7 @@ spec:
         - name: artifact-registry-secret
       containers:
         - name: server
-          image: asia-south1-docker.pkg.dev/chatverse-475212/chatverse-docker-repo/server:latest
+          image: asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/server:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8081
@@ -34,9 +34,8 @@ metadata:
 spec:
   selector:
     app: chatverse-server
-  type: NodePort
+  type: LoadBalancer
   ports:
     - name: http
-      port: 4000        # service port
-      targetPort: 8081  # container port
-      nodePort: 31555   # choose a port between 30000–32767 or let Kubernetes assign if omitted
+      port: 4000           # external port (what the LB exposes)
+      targetPort: 8081     # port on the container

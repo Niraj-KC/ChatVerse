@@ -26,6 +26,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "dayjs": "^1.11.11",
+    "dotenv": "^17.2.3",
     "emoji-picker-react": "^4.9.2",
     "emoji-regex": "^10.3.0",
     "javascript-time-ago": "^2.5.9",
