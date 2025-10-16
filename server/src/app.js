@@ -16,8 +16,7 @@ export const httpServer = createServer(app);
 const io = new Server(httpServer, {
     pingTimeout: 6000,
     cors: {
-        // origin: process.env.CORS_ORIGIN,
-        origin: "*",
+        origin: process.env.CORS_ORIGIN,
         credentials: true,
     },
 });
@@ -28,8 +27,10 @@ const corsOptions = {
     credentials: true,
 };
 
-// app.use(cors(corsOptions));
-app.use(cors());
+
+app.use(cors(corsOptions));
+
+console.log(`Allowed origins: ${process.env.CORS_ORIGIN}`);
 
 const morganFormat =
     ":method :url :status :response-time ms :user-agent [:date[clf]]";
