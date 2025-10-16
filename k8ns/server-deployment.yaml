@@ -12,10 +12,12 @@ spec:
       labels:
         app: chatverse-server
     spec:
+      imagePullSecrets:
+        - name: artifact-registry-secret
       containers:
         - name: server
-          image: chatverse-server:latest
-          imagePullPolicy: IfNotPresent
+          image: asia-south1-docker.pkg.dev/chatverse-475212/chatverse-docker-repo/server:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8081
           env:
