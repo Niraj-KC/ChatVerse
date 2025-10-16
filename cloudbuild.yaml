@@ -4,41 +4,41 @@ logsBucket: gs://chatverse-cloud-build-logs
 substitutions:
   _SERVER_IMAGE: "asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/server:latest"
   _CLIENT_IMAGE: "asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/client:latest"
-  _CLUSTER_NAME: "chatverse-475306"
+  _CLUSTER_NAME: "chatverse-cluster"
   _CLUSTER_ZONE: "asia-south1-a"
   _NAMESPACE: "default"
   _PROJECT_ID: "chatverse-475306"
 
 steps:
-- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
-  entrypoint: 'bash'
-  args:
-    - '-c'
-    - |
-      set -euo pipefail
-      echo "Project: ${_PROJECT_ID}"
-      echo "Getting credentials for cluster ${_CLUSTER_NAME} in ${_CLUSTER_ZONE}..."
-      gcloud container clusters get-credentials "${_CLUSTER_NAME}" --zone "${_CLUSTER_ZONE}" --project "${_PROJECT_ID}"
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:latest"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -euo pipefail
+        echo "Project: ${_PROJECT_ID}"
+        echo "Getting credentials for cluster ${_CLUSTER_NAME} in ${_CLUSTER_ZONE}..."
+        gcloud container clusters get-credentials "${_CLUSTER_NAME}" --zone "${_CLUSTER_ZONE}" --project "${_PROJECT_ID}"
 
-      # SERVER
-      if kubectl get deploy server -n "${_NAMESPACE}" >/dev/null 2>&1; then
-        echo "Updating server deployment image -> ${_SERVER_IMAGE}"
-        kubectl set image deployment/server server="${_SERVER_IMAGE}" -n "${_NAMESPACE}"
-        kubectl rollout status deployment/server -n "${_NAMESPACE}" --timeout=300s
-      else
-        echo "server deployment not found — attempting to apply manifests/k8s-server.yaml"
-        kubectl apply -f k8s/k8s-server.yaml -n "${_NAMESPACE}"
-        kubectl rollout status deployment/server -n "${_NAMESPACE}" --timeout=300s
-      fi
+        # SERVER
+        if kubectl get deploy server -n "${_NAMESPACE}" >/dev/null 2>&1; then
+          echo "Updating server deployment image -> ${_SERVER_IMAGE}"
+          kubectl set image deployment/server server="${_SERVER_IMAGE}" -n "${_NAMESPACE}"
+          kubectl rollout status deployment/server -n "${_NAMESPACE}" --timeout=300s
+        else
+          echo "server deployment not found — attempting to apply manifests/k8s-server.yaml"
+          kubectl apply -f k8s/k8s-server.yaml -n "${_NAMESPACE}"
+          kubectl rollout status deployment/server -n "${_NAMESPACE}" --timeout=300s
+        fi
 
-      # CLIENT
-      if kubectl get deploy client -n "${_NAMESPACE}" >/dev/null 2>&1; then
-        echo "Updating client deployment image -> ${_CLIENT_IMAGE}"
-        kubectl set image deployment/client client="${_CLIENT_IMAGE}" -n "${_NAMESPACE}"
-        kubectl rollout status deployment/client -n "${_NAMESPACE}" --timeout=300s
-      else
-        echo "client deployment not found — attempting to apply manifests/k8s-client.yaml"
-        kubectl apply -f k8s/k8s-client.yaml -n "${_NAMESPACE}"
-        kubectl rollout status deployment/client -n "${_NAMESPACE}" --timeout=300s
-      fi
+        # CLIENT
+        if kubectl get deploy client -n "${_NAMESPACE}" >/dev/null 2>&1; then
+          echo "Updating client deployment image -> ${_CLIENT_IMAGE}"
+          kubectl set image deployment/client client="${_CLIENT_IMAGE}" -n "${_NAMESPACE}"
+          kubectl rollout status deployment/client -n "${_NAMESPACE}" --timeout=300s
+        else
+          echo "client deployment not found — attempting to apply manifests/k8s-client.yaml"
+          kubectl apply -f k8s/k8s-client.yaml -n "${_NAMESPACE}"
+          kubectl rollout status deployment/client -n "${_NAMESPACE}" --timeout=300s
+        fi
 timeout: 1200s
