@@ -20,25 +20,27 @@ steps:
         echo "Getting credentials for cluster ${_CLUSTER_NAME} in ${_CLUSTER_ZONE}..."
         gcloud container clusters get-credentials "${_CLUSTER_NAME}" --zone "${_CLUSTER_ZONE}" --project "${_PROJECT_ID}"
 
-        # SERVER
+        echo "----- SERVER DEPLOYMENT -----"
         if kubectl get deploy server -n "${_NAMESPACE}" >/dev/null 2>&1; then
           echo "Updating server deployment image -> ${_SERVER_IMAGE}"
           kubectl set image deployment/server server="${_SERVER_IMAGE}" -n "${_NAMESPACE}"
           kubectl rollout status deployment/server -n "${_NAMESPACE}" --timeout=300s
         else
-          echo "server deployment not found — attempting to apply manifests/k8s-server.yaml"
-          kubectl apply -f k8s/k8s-server.yaml -n "${_NAMESPACE}"
+          echo "server deployment not found — applying server manifest..."
+          kubectl apply -f k8ns/server-deployment.yaml -n "${_NAMESPACE}"
           kubectl rollout status deployment/server -n "${_NAMESPACE}" --timeout=300s
         fi
 
-        # CLIENT
+        echo "----- CLIENT DEPLOYMENT -----"
         if kubectl get deploy client -n "${_NAMESPACE}" >/dev/null 2>&1; then
           echo "Updating client deployment image -> ${_CLIENT_IMAGE}"
           kubectl set image deployment/client client="${_CLIENT_IMAGE}" -n "${_NAMESPACE}"
           kubectl rollout status deployment/client -n "${_NAMESPACE}" --timeout=300s
         else
-          echo "client deployment not found — attempting to apply manifests/k8s-client.yaml"
-          kubectl apply -f k8s/k8s-client.yaml -n "${_NAMESPACE}"
+          echo "client deployment not found — applying client manifest..."
+          kubectl apply -f k8ns/client-deployment.yaml -n "${_NAMESPACE}"
           kubectl rollout status deployment/client -n "${_NAMESPACE}" --timeout=300s
         fi
+
+        echo "✅ Deployments updated successfully."
 timeout: 1200s
