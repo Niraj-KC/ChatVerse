@@ -5,7 +5,7 @@ substitutions:
   _SERVER_IMAGE: "asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/server:latest"
   _CLIENT_IMAGE: "asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/client:latest"
   _CLUSTER_NAME: "chatverse-cluster"
-  _CLUSTER_ZONE: "asia-south1-a"
+  _CLUSTER_ZONE: "asia-south1"
   _NAMESPACE: "default"
   _PROJECT_ID: "chatverse-475306"
 
