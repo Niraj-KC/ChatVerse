@@ -1,58 +1,165 @@
-# cloudbuild.yaml
-logsBucket: gs://chatverse-cloud-build-logs
-
-substitutions:
-  _SERVER_IMAGE: "asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/server:latest"
-  _CLIENT_IMAGE: "asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/client:latest"
-  _CLUSTER_NAME: "chatverse-cluster"
-  _CLUSTER_ZONE: "asia-south1"
-  _NAMESPACE: "default"
-  _PROJECT_ID: "chatverse-475306"
 steps:
-  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:latest"
-    entrypoint: "bash"
+  # Step 1: Build and push client image
+  - name: 'gcr.io/cloud-builders/docker'
     args:
-      - "-c"
-      - |
-        set -euo pipefail
+      - 'build'
+      - '-t'
+      - 'asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/client:latest'
+      - '-t'
+      - 'asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/client:$SHORT_SHA'
+      - '-f'
+      - './client/Dockerfile'
+      - './client'
+    id: 'build-client'
 
-        echo "🔐 Getting credentials for cluster ${_CLUSTER_NAME}..."
-        gcloud container clusters get-credentials "${_CLUSTER_NAME}" --zone "${_CLUSTER_ZONE}" --project "${_PROJECT_ID}"
+  # Step 2: Build and push server image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/server:latest'
+      - '-t'
+      - 'asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/server:$SHORT_SHA'
+      - '-f'
+      - './server/Dockerfile'
+      - './server'
+    id: 'build-server'
 
-        echo "----- 📥 Downloading secrets from bucket -----"
-        gsutil cp "gs://${_BUCKET}/secrets/server-secret.yaml" k8ns/server-secret.yaml || echo "⚠️ Server secret not found in bucket"
+  # Step 3: Push client image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/client:latest'
+    id: 'push-client'
+    waitFor: ['build-client']
 
-        gsutil cp "gs://${_BUCKET}/secrets/client-secret.yaml" k8ns/client-secret.yaml || echo "⚠️ Client secret not found in bucket"
+  # Step 4: Push server image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/server:latest'
+    id: 'push-server'
+    waitFor: ['build-server']
 
-        echo "----- 🧾 Applying Secrets (if they exist) -----"
-        if [ -f "k8ns/server-secret.yaml" ]; then
-          kubectl apply -f k8ns/server-secret.yaml -n "${_NAMESPACE}"
-        fi
-        if [ -f "k8ns/client-secret.yaml" ]; then
-          kubectl apply -f k8ns/client-secret.yaml -n "${_NAMESPACE}"
-        fi
+  # Step 5: Download client secret from Cloud Storage
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args:
+      - 'cp'
+      - 'gs://chatverse-cloud-build-logs/secrets/client-secret.yaml'
+      - './client-secret.yaml'
+    id: 'download-client-secret'
 
-        echo "----- 🚀 SERVER DEPLOYMENT -----"
-        if kubectl get deploy chatverse-server -n "${_NAMESPACE}" >/dev/null 2>&1; then
-          echo "Updating server image to ${_SERVER_IMAGE}"
-          kubectl set image deployment/chatverse-server server="${_SERVER_IMAGE}" -n "${_NAMESPACE}"
-          kubectl rollout status deployment/chatverse-server -n "${_NAMESPACE}" --timeout=300s
-        else
-          echo "Server deployment not found — applying manifest..."
-          kubectl apply -f k8ns/server-deployment.yaml -n "${_NAMESPACE}"
-          kubectl rollout status deployment/chatverse-server -n "${_NAMESPACE}" --timeout=300s
-        fi
+  # Step 6: Download server secret from Cloud Storage
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args:
+      - 'cp'
+      - 'gs://chatverse-cloud-build-logs/secrets/server-secret.yaml'
+      - './server-secret.yaml'
+    id: 'download-server-secret'
 
-        echo "----- 🚀 CLIENT DEPLOYMENT -----"
-        if kubectl get deploy chatverse-client -n "${_NAMESPACE}" >/dev/null 2>&1; then
-          echo "Updating client image to ${_CLIENT_IMAGE}"
-          kubectl set image deployment/chatverse-client client="${_CLIENT_IMAGE}" -n "${_NAMESPACE}"
-          kubectl rollout status deployment/chatverse-client -n "${_NAMESPACE}" --timeout=300s
-        else
-          echo "Client deployment not found — applying manifest..."
-          kubectl apply -f k8ns/client-deployment.yaml -n "${_NAMESPACE}"
-          kubectl rollout status deployment/chatverse-client -n "${_NAMESPACE}" --timeout=300s
-        fi
+  # Step 7: Get GKE credentials
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'container'
+      - 'clusters'
+      - 'get-credentials'
+      - 'chatverse-cluster'  # Replace with your cluster name
+      - '--region=asia-south1'  # Replace with your cluster region/zone
+      - '--project=chatverse-475306'
+    id: 'get-gke-credentials'
+    waitFor: ['-']
 
-        echo "✅ All deployments successfully rolled out."
-timeout: 1200s
+  # Step 8: Create or update client secrets in GKE
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args:
+      - 'apply'
+      - '-f'
+      - 'client-secret.yaml'
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=asia-south1'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=chatverse-cluster'
+    id: 'apply-client-secret'
+    waitFor: ['get-gke-credentials', 'download-client-secret']
+
+  # Step 9: Create or update server secrets in GKE
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args:
+      - 'apply'
+      - '-f'
+      - 'server-secret.yaml'
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=asia-south1'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=chatverse-cluster'
+    id: 'apply-server-secret'
+    waitFor: ['get-gke-credentials', 'download-server-secret']
+
+  # Step 10: Deploy client to GKE
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args:
+      - 'apply'
+      - '-f'
+      - 'k8s/client-deployment.yaml'  # Adjust path if needed
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=asia-south1'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=chatverse-cluster'
+    id: 'deploy-client'
+    waitFor: ['push-client', 'apply-client-secret']
+
+  # Step 11: Deploy server to GKE
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args:
+      - 'apply'
+      - '-f'
+      - 'k8s/server-deployment.yaml'  # Adjust path if needed
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=asia-south1'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=chatverse-cluster'
+    id: 'deploy-server'
+    waitFor: ['push-server', 'apply-server-secret']
+
+  # Step 12: Wait for client rollout to complete
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args:
+      - 'rollout'
+      - 'status'
+      - 'deployment/chatverse-client'
+      - '--timeout=5m'
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=asia-south1'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=chatverse-cluster'
+    id: 'rollout-client'
+    waitFor: ['deploy-client']
+
+  # Step 13: Wait for server rollout to complete
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args:
+      - 'rollout'
+      - 'status'
+      - 'deployment/chatverse-server'
+      - '--timeout=5m'
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=asia-south1'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=chatverse-cluster'
+    id: 'rollout-server'
+    waitFor: ['deploy-server']
+
+# Images to be pushed to Artifact Registry
+images:
+  - 'asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/client:latest'
+  - 'asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/client:$SHORT_SHA'
+  - 'asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/server:latest'
+  - 'asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/server:$SHORT_SHA'
+
+# Build timeout (default is 10 minutes)
+timeout: '1800s'
+
+# Options
+options:
+  machineType: 'N1_HIGHCPU_8'  # Use a more powerful machine for faster builds
+  logging: CLOUD_LOGGING_ONLY
+  
+# Substitutions (optional - can be overridden in trigger)
+substitutions:
+  _CLUSTER_NAME: 'chatverse-cluster'
+  _CLUSTER_REGION: 'asia-south1'
+  _K8S_DEPLOYMENT_PATH: 'k8s'
