@@ -1,4 +1,6 @@
 # cloudbuild.yaml
+logsBucket: gs://chatverse-cloud-build-logs
+
 substitutions:
   _SERVER_IMAGE: "asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/server:latest"
   _CLIENT_IMAGE: "asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/client:latest"
