@@ -1,49 +1,41 @@
-logsBucket: gs://chatverse-cloud-build-logs
-
-substitutions:
-  _SERVER_IMAGE: "asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/server:latest"
-  _CLIENT_IMAGE: "asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/client:latest"
-  _CLUSTER_NAME: "chatverse-cluster"
-  _CLUSTER_ZONE: "asia-south1-a"
-  _NAMESPACE: "default"
-  _PROJECT_ID: "chatverse-475306"
-
-steps:
-  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:latest"
-    entrypoint: "bash"
-    args:
-      - "-c"
-      - |
-        set -euo pipefail
-
-        echo "🔐 Getting credentials for cluster ${_CLUSTER_NAME}..."
-        gcloud container clusters get-credentials "${_CLUSTER_NAME}" --zone "${_CLUSTER_ZONE}" --project "${_PROJECT_ID}"
-
-        echo "----- 🧾 Applying Secrets (if needed) -----"
-        kubectl apply -f k8ns/server-secret.yaml -n "${_NAMESPACE}" || true
-        kubectl apply -f k8ns/client-secret.yaml -n "${_NAMESPACE}" || true
-
-        echo "----- 🚀 SERVER DEPLOYMENT -----"
-        if kubectl get deploy chatverse-server -n "${_NAMESPACE}" >/dev/null 2>&1; then
-          echo "Updating server image to ${_SERVER_IMAGE}"
-          kubectl set image deployment/chatverse-server server="${_SERVER_IMAGE}" -n "${_NAMESPACE}"
-          kubectl rollout status deployment/chatverse-server -n "${_NAMESPACE}" --timeout=300s
-        else
-          echo "Server deployment not found — applying manifest..."
-          kubectl apply -f k8ns/server-deployment.yaml -n "${_NAMESPACE}"
-          kubectl rollout status deployment/chatverse-server -n "${_NAMESPACE}" --timeout=300s
-        fi
-
-        echo "----- 🚀 CLIENT DEPLOYMENT -----"
-        if kubectl get deploy chatverse-client -n "${_NAMESPACE}" >/dev/null 2>&1; then
-          echo "Updating client image to ${_CLIENT_IMAGE}"
-          kubectl set image deployment/chatverse-client client="${_CLIENT_IMAGE}" -n "${_NAMESPACE}"
-          kubectl rollout status deployment/chatverse-client -n "${_NAMESPACE}" --timeout=300s
-        else
-          echo "Client deployment not found — applying manifest..."
-          kubectl apply -f k8ns/client-deployment.yaml -n "${_NAMESPACE}"
-          kubectl rollout status deployment/chatverse-client -n "${_NAMESPACE}" --timeout=300s
-        fi
-
-        echo "✅ All deployments successfully rolled out."
-timeout: 1200s
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatverse-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chatverse-server
+  template:
+    metadata:
+      labels:
+        app: chatverse-server
+    spec:
+      imagePullSecrets:
+        - name: artifact-registry-secret
+      containers:
+        - name: server
+          image: asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/server:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8081
+          env:
+            - name: PORT
+              value: "8081"
+          envFrom:
+            - secretRef:
+                name: chatverse-server-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatverse-server
+spec:
+  selector:
+    app: chatverse-server
+  type: LoadBalancer
+  ports:
+    - name: http
+      port: 4000           # external port (what the LB exposes)
+      targetPort: 8081     # port on the container
