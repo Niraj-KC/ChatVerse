@@ -14,7 +14,6 @@ spec:
     spec:
       imagePullSecrets:
         - name: artifact-registry-secret
-
       containers:
         - name: server
           image: asia-south1-docker.pkg.dev/chatverse-475212/chatverse-docker-repo/server:latest
