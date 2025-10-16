@@ -16,7 +16,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import socketio from "socket.io-client"
 import useScreenSize from '@/hooks/useScreenSize'
 
-const socketBaseUrl = import.meta.env.VITE_SOCKET_URL || process.env.VITE_SOCKET_URL || process.env.SOCKET_URL;
+const socketBaseUrl = import.meta.env.VITE_SOCKET_URL || process.env.VITE_SOCKET_URL || process.env.SOCKET_URL || "http://chatverse-server:4000";
 
 export default function ChatPage() {
 
