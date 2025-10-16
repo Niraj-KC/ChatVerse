@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom'
-import verifyGif from "../../../public/assets/1134-verified-animated.gif"
+import verifyGif from "@/assets/1134-verified-animated.gif"
 import { useResendVerifyUserMutation, useVerifyUserMutation } from '@/features/auth/authApi'
 import { useEffect, useState } from 'react'
 import Spinners from './Spinners'
