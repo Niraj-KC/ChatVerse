@@ -10,9 +10,6 @@ import AddPage from "./pages/AddPage.tsx"
 import VerifyPage from "./pages/VerifyPage.tsx"
 import SchedulePage from "./pages/SchedulePage.tsx"
 
-import dotenv from "dotenv";
-dotenv.config()
-
 function App() {
   return (
     <Routes>
