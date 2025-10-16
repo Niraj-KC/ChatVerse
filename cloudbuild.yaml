@@ -162,4 +162,4 @@ options:
 substitutions:
   _CLUSTER_NAME: 'chatverse-cluster'
   _CLUSTER_REGION: 'asia-south1'
-  _K8S_DEPLOYMENT_PATH: 'k8ns'
+  _K8S_DEPLOYMENT_PATH: 'k8s'

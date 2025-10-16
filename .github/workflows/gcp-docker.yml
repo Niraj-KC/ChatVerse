@@ -1,35 +1,35 @@
-name: Build & Push Client & Server Images to GCP
+# name: Build & Push Client & Server Images to GCP
 
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+# on:
+#   push:
+#     branches:
+#       - main
+#   workflow_dispatch:
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+#       - name: Authenticate to Google Cloud
+#         uses: google-github-actions/auth@v2
+#         with:
+#           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
+#       - name: Configure Docker for Artifact Registry
+#         run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
 
-      - name: Build and push CLIENT image
-        run: |
-          IMAGE_CLIENT=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/chatverse-docker-repo/client:latest
-          docker build -t $IMAGE_CLIENT -f client/Dockerfile ./client
-          docker push $IMAGE_CLIENT
+#       - name: Build and push CLIENT image
+#         run: |
+#           IMAGE_CLIENT=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/chatverse-docker-repo/client:latest
+#           docker build -t $IMAGE_CLIENT -f client/Dockerfile ./client
+#           docker push $IMAGE_CLIENT
 
-      - name: Build and push SERVER image
-        run: |
-          IMAGE_SERVER=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/chatverse-docker-repo/server:latest
-          docker build -t $IMAGE_SERVER -f server/Dockerfile ./server
-          docker push $IMAGE_SERVER
+#       - name: Build and push SERVER image
+#         run: |
+#           IMAGE_SERVER=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/chatverse-docker-repo/server:latest
+#           docker build -t $IMAGE_SERVER -f server/Dockerfile ./server
+#           docker push $IMAGE_SERVER
