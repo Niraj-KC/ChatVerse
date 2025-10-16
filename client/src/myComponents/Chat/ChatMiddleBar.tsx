@@ -9,8 +9,8 @@ import ChatImage from './ChatImage';
 import ChatSimple from './ChatSimple';
 import "./opacity.css";
 import Spinners from './Spinners';
-import chatFiller from '/assets/chatting-33.svg';
-import chatFiller2 from '/assets/conversation-13.svg';
+import chatFiller from '@/assets/chatting-33.svg';
+import chatFiller2 from '@/assets/conversation-13.svg';
 import ChatPolling from './ChatPolling';
 
 
