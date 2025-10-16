@@ -1,7 +1,7 @@
 import { BaseQueryApi, createApi, FetchArgs, fetchBaseQuery } from "@reduxjs/toolkit/query/react"
 
 import { setCredientials, setLogout } from "../../auth/authSlice"
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || process.env.VITE_API_BASE_URL || process.env.API_BASE_URL || "http://chatverse-server:4000/api/v1";
+import { apiBaseUrl } from "@/lib/utils"
 
 
 const baseQuery = fetchBaseQuery({

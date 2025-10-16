@@ -15,8 +15,8 @@ import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import socketio from "socket.io-client"
 import useScreenSize from '@/hooks/useScreenSize'
+import { socketBaseURL } from '@/lib/utils'
 
-const socketBaseUrl = import.meta.env.VITE_SOCKET_URL || process.env.VITE_SOCKET_URL || process.env.SOCKET_URL || "http://chatverse-server:4000";
 
 export default function ChatPage() {
 
@@ -143,7 +143,7 @@ export default function ChatPage() {
     }, [isConnected])
 
     const initSocket = () => {
-        return socketio(socketBaseUrl, {
+        return socketio(socketBaseURL, {
             withCredentials: true,
             extraHeaders: {
                 token
