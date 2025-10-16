@@ -14,22 +14,22 @@ import { useNavigate } from "react-router-dom"
 import { setCurrentChat } from "@/features/chat/chatSlice"
 
 export default function GroupAdd() {
-    const [values, setValues] = useState("")
-    const [data, setData] = useState([])
-    const [members, setMembers] = useState([])
+    const [values, setValues] = useState<string>("")
+    const [data, setData] = useState<any[]>([])
+    const [members, setMembers] = useState<any[]>([])
     const { toast } = useToast()
     const [isAddGroup, setIsAddGroup] = useState(false)
-    const { data: search, refetch, isFetching: isFetchingAvailableUser } = useSearchAvailableUsersQuery(values)
+    const { data: search, refetch, isFetching: isFetchingAvailableUser } = useSearchAvailableUsersQuery(values as any)
     const [createGroup, { isLoading }] = useCreateGroupMutation()
     const [createOnetoOne] = useCreateOneChatMutation()
-    const [singleParticipant, setSingleParticipant] = useState({})
+    const [singleParticipant, setSingleParticipant] = useState<any>({})
     const dispatch = useDispatch()
     const navigate = useNavigate()
     useEffect(() => {
         refetch()
         setData(() => {
-            return search?.data?.filter((user) => {
-                const isPresent = members.some((member) => {
+            return (search as any)?.data?.filter((user: any) => {
+                const isPresent = (members as any).some((member: any) => {
                     return member?._id === user?._id
                 })
                 if (!isPresent) return user
@@ -37,9 +37,9 @@ export default function GroupAdd() {
         })
     }, [values, search, members])
 
-    const removeMember = (userId) => {
+    const removeMember = (userId: any) => {
         setMembers(() => {
-            return members?.filter((user) => {
+            return members?.filter((user: any) => {
                 if (user?._id !== userId) return user
             })
         })
@@ -47,7 +47,7 @@ export default function GroupAdd() {
 
     const createOneToOneHandler = async () => {
         try {
-            const res = await createOnetoOne(singleParticipant?._id).unwrap()
+            const res = await createOnetoOne((singleParticipant as any)?._id as any).unwrap()
             console.log("response", res)
             if (res?.statuscode !== 201) {
                 toast({ title: res?.message, variant: "destructive" })
@@ -67,7 +67,7 @@ export default function GroupAdd() {
         })
         .required()
 
-    const { register, handleSubmit, formState: { errors }, setValue } = useForm({
+    const { register, handleSubmit, formState: { errors }, setValue } = useForm<any>({
         defaultValues: {
             name: "",
             description: "",
@@ -75,17 +75,17 @@ export default function GroupAdd() {
         },
         resolver: yupResolver(schema)
     })
-    const onSubmitHandler = async (data) => {
-        const participants = members?.map((user) => user?._id)
+    const onSubmitHandler = async (data: any) => {
+        const participants = members?.map((user: any) => user?._id)
         const dataToSend = { ...data, participants }
         try {
             const res = await createGroup(dataToSend).unwrap()
             toast({ title: "Group Created Successfully" })
-            console.log("response", res?.data)
-            dispatch(setCurrentChat(res?.data))
+            console.log("response", (res as any)?.data)
+            dispatch(setCurrentChat((res as any)?.data))
             navigate("/")
         } catch (error) {
-            toast({ title: error?.data?.message || "Something went wrong", variant: "destructive" })
+            toast({ title: (error as any)?.data?.message || "Something went wrong", variant: "destructive" })
             console.log(error)
         }
         console.log({ ...data, participants })
@@ -112,7 +112,7 @@ export default function GroupAdd() {
                                     <ScrollArea className="h-[300px] w-auto lg:w-[350px] rounded-md bg-zinc-900 mt-2 p-4">
                                         <div className="">
                                             {
-                                                data && data?.map((user, i) => {
+                                                data && data?.map((user: any, i: any) => {
                                                     return (
                                                         <div className="flex flex-col mt-2 cursor-pointer " key={i} onClick={() => {
                                                             if (isAddGroup) {
@@ -151,7 +151,7 @@ export default function GroupAdd() {
                                                 </div>
                                             </div>
                                             {
-                                                members && members?.map((user, i) => {
+                                                members && members?.map((user: any, i: any) => {
                                                     return (
                                                         <div className=" flex flex-col mt-2 cursor-pointer " key={i}>
                                                             <div className="px-2 bg-zinc-800 flex items-center rounded-md gap-2" >

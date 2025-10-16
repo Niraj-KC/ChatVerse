@@ -13,9 +13,9 @@ export const useLogout = () => {
             dispatch(setLogout())
             dispatch({ type: "RESET" })
             toast({ title: "Logged Out Successfully" })
-        } catch (error) {
+        } catch (error: any) {
             console.log(error)
-            toast({ title: error?.error })
+            toast({ title: (error as any)?.error as any })
         }
     }
 }

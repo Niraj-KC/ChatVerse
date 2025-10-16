@@ -2,21 +2,22 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { selectCurrentUser } from '@/features/auth/authSlice';
 import { selectAllChats } from '@/features/chat/chatSlice';
 import { useEffect, useState } from 'react';
+import { IoClose } from "react-icons/io5";
 import { useSelector } from 'react-redux';
 
 export default function Users() {
-    const [values, setValues] = useState("")
-    const [members, setMembers] = useState([])
+    const [values, setValues] = useState<string>("")
+    const [members, setMembers] = useState<any[]>([])
     const chats = useSelector(selectAllChats);
-    const [data, setData] = useState(chats)
+    const [data, setData] = useState<any>(chats as any)
     const user = useSelector(selectCurrentUser)
     useEffect(() => {
-        const setDataVal = chats?.filter((chat) => {
+        const setDataVal = (chats as any)?.filter((chat: any) => {
             if (!members.some((mem) => mem?._id === chat?._id)) return chat
         })
-        setData(setDataVal?.filter((chat) => {
+        setData((setDataVal as any)?.filter((chat: any) => {
             const isGroup = chat?.isGroup
-            const otherParticipant = chat?.participants?.filter((participant) => {
+            const otherParticipant = chat?.participants?.filter((participant: any) => {
                 if (participant?._id !== user?._id)
                     return participant
             })
@@ -25,9 +26,9 @@ export default function Users() {
         }))
     }, [values, members])
 
-    const removeMember = (userId) => {
+    const removeMember = (userId: any) => {
         setMembers(() => {
-            return members?.filter((user) => {
+            return members?.filter((user: any) => {
                 if (user?._id !== userId) return user
             })
         })
@@ -41,9 +42,9 @@ export default function Users() {
                 <ScrollArea className="h-[300px] w-auto  rounded-md bg-zinc-900 mt-2 p-4 ">
                     <div className="">
                         {
-                            data && data?.map((chat, i) => {
+                            data && data?.map((chat: any, i: any) => {
                                 const isGroup = chat?.isGroup
-                                const otherParticipant = chat?.participants?.filter((participant) => {
+                                const otherParticipant = chat?.participants?.filter((participant: any) => {
                                     if (participant?._id !== user?._id)
                                         return participant
                                 })
@@ -80,9 +81,9 @@ export default function Users() {
                             </div>
                         </div>
                         {
-                            members && members?.map((users, i) => {
+                            members && members?.map((users: any, i: any) => {
                                 const isGroup = users?.isGroup
-                                const otherParticipant = users?.participants?.filter((participant) => {
+                                const otherParticipant = users?.participants?.filter((participant: any) => {
                                     if (participant?._id !== user?._id)
                                         return participant
                                 })

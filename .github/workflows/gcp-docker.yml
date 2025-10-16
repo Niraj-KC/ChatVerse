@@ -22,11 +22,11 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
 
-      # - name: Build and push CLIENT image
-      #   run: |
-      #     IMAGE_CLIENT=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/chatverse-docker-repo/client:latest
-      #     docker build -t $IMAGE_CLIENT -f client/Dockerfile ./client
-      #     docker push $IMAGE_CLIENT
+      - name: Build and push CLIENT image
+        run: |
+          IMAGE_CLIENT=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/chatverse-docker-repo/client:latest
+          docker build -t $IMAGE_CLIENT -f client/Dockerfile ./client
+          docker push $IMAGE_CLIENT
 
       - name: Build and push SERVER image
         run: |

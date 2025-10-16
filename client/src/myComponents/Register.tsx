@@ -24,7 +24,7 @@ export default function Register() {
     const accessToken = useSelector(selectCurrentToken)
     const [registerUser, { isLoading }] = useRegisterUserMutation()
     const navigate = useNavigate();
-    const { register, handleSubmit, formState: { errors }, setValue } = useForm(
+    const { register, handleSubmit, formState: { errors }, setValue } = useForm<any>(
         {
             resolver: yupResolver(RegisterValidationSchema),
             defaultValues: {
@@ -37,7 +37,7 @@ export default function Register() {
             }
         }
     )
-    const onSubmit = async (data: FormData) => {
+    const onSubmit = async (data: any) => {
         console.log("registerdata",data)
         try {
             const registerData = await registerUser(data).unwrap()

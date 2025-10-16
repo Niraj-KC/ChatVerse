@@ -42,11 +42,11 @@ export default function MoreInfo() {
     const currentChat = useSelector(selectCurrentChat)
     const otherParticipant = useSelector(selectOtherParticipants)
     const user = useSelector(selectCurrentUser)
-    const [members, setMembers] = useState<Object[]>([])
+    const [members, setMembers] = useState<any[]>([])
     const [searchValue, setSearchValue] = useState<string>("")
-    const [editGroupName, setEditGroupName] = useState<string>(currentChat?.Group?.name)
+    const [editGroupName, setEditGroupName] = useState<string>(currentChat?.Group?.name as any)
 
-    const formatDate = (dates) => {
+    const formatDate = (dates: any) => {
         const mongoDate = new Date(dates)
         const date = moment(mongoDate).format('LL')
         return date
@@ -59,12 +59,12 @@ export default function MoreInfo() {
     const dispatch = useDispatch()
 
     useEffect(() => {
-        const membersWOLoggedInUser = currentChat?.participants?.filter((participant) => {
+        const membersWOLoggedInUser = currentChat?.participants?.filter((participant: any) => {
             if (participant?._id !== user?._id) return participant
         })
-        const modifiedLoggedInUser = { ...user, name: "You" }
-        const totalUser = [modifiedLoggedInUser, ...membersWOLoggedInUser]
-        const filterMember = totalUser.filter((participant) => {
+        const modifiedLoggedInUser: any = { ...(user as any), name: "You" }
+        const totalUser: any[] = [modifiedLoggedInUser, ...(membersWOLoggedInUser as any)]
+        const filterMember = totalUser.filter((participant: any) => {
             if (participant?.name?.toLowerCase()?.trim()?.match(searchValue.toLowerCase().trim()) ||
                 participant?.username?.toLowerCase()?.trim()?.match(searchValue.toLowerCase().trim())) return participant
         })
@@ -74,20 +74,20 @@ export default function MoreInfo() {
         })
     }, [currentChat, searchValue])
 
-    const addAdminFunction = async (participantId) => {
+    const addAdminFunction = async (participantId: any) => {
         try {
             const data = {
                 chatId: currentChat?._id,
                 admins: [participantId]
             }
-            const res = await addAdmin(data).unwrap()
+            const res = await addAdmin(data as any).unwrap()
             console.log(res)
         } catch (error) {
             toast({ title: error?.data?.message, variant: "destructive" })
             console.log(error)
         }
     }
-    const createChatFunction = async (singleParticipant) => {
+    const createChatFunction = async (singleParticipant: any) => {
         try {
             const res = await createOnetoOne(singleParticipant).unwrap()
             console.log("response", res)
@@ -104,7 +104,7 @@ export default function MoreInfo() {
         }
     }
 
-    const removeParticipantFunction = async (participantId) => {
+    const removeParticipantFunction = async (participantId: any) => {
         try {
             const data = {
                 chatId: currentChat?._id,
@@ -117,7 +117,7 @@ export default function MoreInfo() {
             console.log(error)
         }
     }
-    const renameGroupFunction = async (chatId) => {
+    const renameGroupFunction = async (chatId: any) => {
         try {
             const data = {
                 chatId,

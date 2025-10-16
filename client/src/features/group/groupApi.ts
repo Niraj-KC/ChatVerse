@@ -2,8 +2,8 @@ import { apiSlice } from "./../chat/api/apiSlice";
 
 export const groupApi = apiSlice.injectEndpoints({
     endpoints: builder => ({
-        addAdmins: builder.mutation({
-            query: (formData) => {
+        addAdmins: builder.mutation<any, any>({
+            query: (formData: any) => {
                 return {
                     url: '/groups/add-admins',
                     method: "POST",
@@ -13,8 +13,8 @@ export const groupApi = apiSlice.injectEndpoints({
             },
             invalidatesTags: ["Chat", "Group"]
         }),
-        renameGroupChat: builder.mutation({
-            query: (formData) => {
+        renameGroupChat: builder.mutation<any, any>({
+            query: (formData: any) => {
                 return {
                     url: "/groups/rename-group",
                     method: "POST",
@@ -24,11 +24,12 @@ export const groupApi = apiSlice.injectEndpoints({
             },
             invalidatesTags:["Chat","Group"]
         }),
-        updateGroupAvatar: builder.mutation({
-            query: (formData, chatId) => {
+        updateGroupAvatar: builder.mutation<any, any>({
+            query: (payload: any) => {
+                const { formData, chatId } = payload as any
                 const formDataBody = new FormData()
-                Object.keys(formData).forEach((key) => {
-                    formDataBody.append(key, formData[key])
+                Object.keys(formData as any).forEach((key: any) => {
+                    formDataBody.append(key as any, (formData as any)[key])
                 })
                 return {
                     url: `/groups/update-group-avatar/${chatId}`,

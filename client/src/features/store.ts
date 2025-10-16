@@ -19,7 +19,7 @@ const appReducer = combineReducers({
     message: messageSlice
 });
 
-const rootReducer = (state, action) => {
+const rootReducer = (state: any, action: any) => {
     if (action.type === "RESET") {
         state = undefined
     }

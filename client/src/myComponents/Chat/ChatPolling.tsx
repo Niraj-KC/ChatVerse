@@ -44,13 +44,13 @@ const pollingData = [
 ]
 
 
-const ChatSimple = function ({ isForwarded, message, isSender, isGroup, senderName, timeAgo, newDate, isPrevSender, color, messageData, replyToContent, replyToColor, replyToName, isReply }) {
+const ChatSimple = function ({ isForwarded, message, isSender, isGroup, senderName, timeAgo, newDate, isPrevSender, color, messageData, replyToContent, replyToColor, replyToName, isReply }: any) {
     const dispatch = useDispatch()
-    const replyHandler = (data) => {
+    const replyHandler = (data: any) => {
         dispatch(setReplyMessage(data))
         dispatch(setReplyOpen(true))
     }
-    const formatTime = (time) => {
+    const formatTime = (time: any) => {
         const mongoDate = new Date(time)
         const timeInLT = moment(mongoDate).format('LT')
         return timeInLT
@@ -76,7 +76,7 @@ const ChatSimple = function ({ isForwarded, message, isSender, isGroup, senderNa
             <div className={`w-full p-2 `} >
                 <div className="flex flex-col gap-3">
                     {
-                        pollingData?.map((d) => {
+                        pollingData?.map((d: any) => {
                             return (
                                 <div className="cursor-pointer bg-zinc-700 p-3 rounded-lg hover:bg-zinc-900">
                                     <div className="flex justify-start w-full items-center gap-2">
@@ -150,7 +150,7 @@ const ChatSimple = function ({ isForwarded, message, isSender, isGroup, senderNa
                                     </div>
                                 </div>
                             </SheetHeader>
-                            <UsersRead_Unread_Sent MessageForNoParticipants={"No One Has Read The Message"} messageData={messageData?.message?.read} />
+                            <UsersRead_Unread_Sent isGroup={isGroup as any} MessageForNoParticipants={"No One Has Read The Message"} messageData={messageData?.message?.read} />
                             <SheetHeader>
                                 <div className="flex items-center gap-3">
                                     <div>
@@ -161,7 +161,7 @@ const ChatSimple = function ({ isForwarded, message, isSender, isGroup, senderNa
                                     </div>
                                 </div>
                             </SheetHeader>
-                            <UsersRead_Unread_Sent MessageForNoParticipants={"Message is not sent to anyone"} messageData={messageData?.message?.sent} />
+                            <UsersRead_Unread_Sent isGroup={isGroup as any} MessageForNoParticipants={"Message is not sent to anyone"} messageData={messageData?.message?.sent} />
                             <SheetHeader><div className="flex items-center gap-2">
                                 <div>
                                     Unread
@@ -171,7 +171,7 @@ const ChatSimple = function ({ isForwarded, message, isSender, isGroup, senderNa
                                 </div>
                             </div>
                             </SheetHeader>
-                            <UsersRead_Unread_Sent isTimeShow={false} MessageForNoParticipants={"Everyone Has Read The Message"} messageData={messageData?.message?.unread} />
+                            <UsersRead_Unread_Sent isGroup={isGroup as any} isTimeShow={false} MessageForNoParticipants={"Everyone Has Read The Message"} messageData={messageData?.message?.unread} />
                         </SheetHeader>
                     </SheetContent>
                 </Sheet>

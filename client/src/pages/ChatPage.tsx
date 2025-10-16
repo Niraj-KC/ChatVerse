@@ -22,13 +22,13 @@ export default function ChatPage() {
     const dispatch = useDispatch()
     const screenSize = useScreenSize()
     const { data, refetch: refetchChats } = useGetAllChatQuery(null)
-    const [typing, setTyping] = useState(false)
-    const [typingData, setTypingData] = useState([])
-    const [chatId, setChatId] = useState(null)
-    const [newMessage, setNewMessage] = useState()
+    const [typing, setTyping] = useState<boolean>(false)
+    const [typingData, setTypingData] = useState<any[]>([])
+    const [chatId, setChatId] = useState<any>(null)
+    const [newMessage, setNewMessage] = useState<any>()
     const [searchInputValue, setSearchInputValue] = useState('')
     const { data: message, refetch, isLoading: isMessageLoading, isFetching: isMessageFetching } = useGetMessageQuery(chatId)
-    const [newChat, setNewChat] = useState([])
+    const [newChat, setNewChat] = useState<any[]>([])
     const currentChat = useSelector(selectCurrentChat)
     const chat = useSelector(selectAllChats)
     const user = useSelector(selectCurrentUser)
@@ -36,13 +36,13 @@ export default function ChatPage() {
     const currentMessage = useSelector(selectCurrentChatMessages)
     const searchChats = useSelector(selectSearchChats)
     const unreadMessage = useSelector(selectUnreadMessage)
-    const [deleteForEveryoneData, setDeleteForEveryoneData] = useState([])
+    const [deleteForEveryoneData, setDeleteForEveryoneData] = useState<any[]>([])
     const { data: unreadMessageFetch, refetch: unreadRefetch } = useGetUnreadMessageQuery(null)
     const [readMessage] = useSetReadMessageMutation()
     const [sentMessage] = useSetSentMessageMutation()
     const [socket, setSocket] = useState<ReturnType<typeof socketio> | null>(null)
-    const [statusMessage, setStatusMessage] = useState([])
-    const [isConnected, setIsConnected] = useState(false)
+    const [statusMessage, setStatusMessage] = useState<any>(null)
+    const [isConnected, setIsConnected] = useState<boolean>(false)
     useEffect(() => {
         console.log("Unread Message:", unreadMessageFetch)
         unreadRefetch()
@@ -98,7 +98,7 @@ export default function ChatPage() {
     }, [newChat])
     useEffect(() => {
         if (deleteForEveryoneData.length) {
-            const deletedChatMessages = currentMessage?.map((msg) => {
+            const deletedChatMessages = currentMessage?.map((msg: any) => {
                 const index = deleteForEveryoneData?.findIndex((d) => d?.message?._id === msg?.messageId)
                 console.log("index", index)
                 if (index !== -1) {
@@ -113,7 +113,7 @@ export default function ChatPage() {
     useEffect(() => {
         console.log("Status Edited Called")
         if (statusMessage) {
-            const statusEditedMessages = currentMessage?.map((msg) => {
+            const statusEditedMessages = currentMessage?.map((msg: any) => {
                 if (statusMessage?.messageId === msg?.messageId) {
                     return { ...msg, ...statusMessage }
                 }
@@ -150,7 +150,7 @@ export default function ChatPage() {
         })
     }
 
-    const newMessageHandler = async (data) => {
+    const newMessageHandler = async (data: any) => {
         if (currentChat?._id !== data?.message?.chat) {
             dispatch(setUreadMessage(data))
             console.log("Data Unread But Sent", data)
@@ -181,36 +181,36 @@ export default function ChatPage() {
         console.log("message handler Current Chat:", currentMessage)
     }
 
-    const handleStopTyping = (data) => {
+    const handleStopTyping = (data: any) => {
         setTyping(false)
         setTypingData([])
     }
 
-    const handleStartTyping = (data) => {
+    const handleStartTyping = (data: any) => {
         if (currentChat?._id !== data?.chatId) return
         setTyping(true)
         setTypingData(data)
         setTypingData(Array.from([data]))
     }
 
-    const newChatHandler = (data) => {
+    const newChatHandler = (data: any) => {
         console.log("new Chats", data)
         if (Object.keys(data)?.length) {
             setNewChat([data])
         }
     }
-    const onConnectionHandler = async (data) => {
+    const onConnectionHandler = async (data: any) => {
         console.log("Connected.................")
         setIsConnected(true)
     }
-    const deleteForEveryoneHandler = (data) => {
+    const deleteForEveryoneHandler = (data: any) => {
         setDeleteForEveryoneData(data)
     }
-    const statusMessageHandler = (data) => {
+    const statusMessageHandler = (data: any) => {
         setStatusMessage(data)
         console.log("StatusMessage:", data)
     }
-    const formatTime = (time) => {
+    const formatTime = (time: any) => {
         if (!time) return ""
         const mongoDate = new Date(time)
         return moment(mongoDate).format('LT')
