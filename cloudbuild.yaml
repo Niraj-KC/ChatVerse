@@ -8,7 +8,6 @@ substitutions:
   _CLUSTER_ZONE: "asia-south1"
   _NAMESPACE: "default"
   _PROJECT_ID: "chatverse-475306"
-
 steps:
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:latest"
     entrypoint: "bash"
@@ -20,9 +19,18 @@ steps:
         echo "🔐 Getting credentials for cluster ${_CLUSTER_NAME}..."
         gcloud container clusters get-credentials "${_CLUSTER_NAME}" --zone "${_CLUSTER_ZONE}" --project "${_PROJECT_ID}"
 
-        echo "----- 🧾 Applying Secrets (if needed) -----"
-        kubectl apply -f k8ns/server-secret.yaml -n "${_NAMESPACE}" || true
-        kubectl apply -f k8ns/client-secret.yaml -n "${_NAMESPACE}" || true
+        echo "----- 📥 Downloading secrets from bucket -----"
+        gsutil cp "gs://${_BUCKET}/secrets/server-secret.yaml" k8ns/server-secret.yaml || echo "⚠️ Server secret not found in bucket"
+
+        gsutil cp "gs://${_BUCKET}/secrets/client-secret.yaml" k8ns/client-secret.yaml || echo "⚠️ Client secret not found in bucket"
+
+        echo "----- 🧾 Applying Secrets (if they exist) -----"
+        if [ -f "k8ns/server-secret.yaml" ]; then
+          kubectl apply -f k8ns/server-secret.yaml -n "${_NAMESPACE}"
+        fi
+        if [ -f "k8ns/client-secret.yaml" ]; then
+          kubectl apply -f k8ns/client-secret.yaml -n "${_NAMESPACE}"
+        fi
 
         echo "----- 🚀 SERVER DEPLOYMENT -----"
         if kubectl get deploy chatverse-server -n "${_NAMESPACE}" >/dev/null 2>&1; then
