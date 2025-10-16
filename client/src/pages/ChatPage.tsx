@@ -16,6 +16,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import socketio from "socket.io-client"
 import useScreenSize from '@/hooks/useScreenSize'
 
+const socketBaseUrl = import.meta.env.VITE_SOCKET_URL;
 
 export default function ChatPage() {
 
@@ -142,7 +143,7 @@ export default function ChatPage() {
     }, [isConnected])
 
     const initSocket = () => {
-        return socketio("http://localhost:4000", {
+        return socketio(socketBaseUrl, {
             withCredentials: true,
             extraHeaders: {
                 token
