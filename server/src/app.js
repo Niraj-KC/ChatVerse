@@ -8,6 +8,7 @@ import { errorHandler } from "./middlewares/error.middleware.js";
 import { initializeSocket } from "./sockets/socket.js";
 import { agenda } from "./agenda/agenda.js";
 import logger from "./utils/logger.js";
+import mongoose from "mongoose";
 
 const app = express();
 export const httpServer = createServer(app);
@@ -67,6 +68,24 @@ import messageRoutes from "./routes/message.routes.js";
 app.use("/api/v1/messages", messageRoutes);
 
 initializeSocket(io);
+
+// assumes express and mongoose are already set up
+app.get('/api/v1/health/live', (req, res) => {
+  // very cheap check: process is alive
+  res.status(200).json({ status: 'alive' });
+});
+
+app.get('/api/v1/health/ready', (req, res) => {
+  // check MongoDB connection state (0 disconnected, 1 connected, 2 connecting, 3 disconnecting)
+  const dbState = mongoose.connection?.readyState ?? 0;
+  const dbReady = dbState === 1;
+
+  if (!dbReady) {
+    return res.status(503).json({ status: 'not_ready', dbState });
+  }
+  // Optionally add other checks (redis, external API, config loaded...)
+  res.status(200).json({ status: 'ready', dbState });
+});
 
 app.use(errorHandler);
 export default app;
