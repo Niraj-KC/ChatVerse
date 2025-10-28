@@ -1,5 +1,5 @@
 
-# 💬 Chatting App:
+# 💬Chatting App:
 
 The Chatting App is a comprehensive real-time messaging application designed to facilitate seamless communication between users. Built with a modern tech stack, this application supports both group and direct messaging, ensuring users can interact in various contexts. The app is designed to be highly responsive, providing a smooth user experience across different devices.
 ## Screenshot
