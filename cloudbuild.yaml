@@ -51,7 +51,7 @@ steps:
         echo "Running vulnerability scan for client image..."
         (gcloud artifacts docker images scan \
         "asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/client:latest" \
-        --location=asia-south1 \
+        --location=asia \
         --format="value(response.scan)") > /workspace/client_scan_id.txt
 
   # Step 6: Run vulnerability scan on server image
@@ -64,7 +64,7 @@ steps:
         echo "Running vulnerability scan for server image..."
         (gcloud artifacts docker images scan \
         "asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/server:latest" \
-        --location=asia-south1 \
+        --location=asia \
         --format="value(response.scan)") > /workspace/server_scan_id.txt
 
   # Step 7: Check severity results for client image
