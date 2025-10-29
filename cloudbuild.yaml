@@ -68,32 +68,32 @@ steps:
   #       --format="value(response.scan)") > /workspace/server_scan_id.txt
 
   # Step 7: Check severity results for client image
-  - id: 'check-client-severity'
-    name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        echo "Checking client image vulnerabilities..."
-        gcloud artifacts docker images list-vulnerabilities $(cat /workspace/client_scan_id.txt) \
-        --format="value(vulnerability.effectiveSeverity)" | if grep -Fxq CRITICAL; \
-        then echo "❌ Client image failed vulnerability check (CRITICAL found)" && exit 1; \
-        else echo "✅ Client image passed vulnerability check (no CRITICAL issues)" && exit 0; fi
-    waitFor: ['scan-client']
+  # - id: 'check-client-severity'
+  #   name: 'gcr.io/cloud-builders/gcloud'
+  #   entrypoint: 'bash'
+  #   args:
+  #     - '-c'
+  #     - |
+  #       echo "Checking client image vulnerabilities..."
+  #       gcloud artifacts docker images list-vulnerabilities $(cat /workspace/client_scan_id.txt) \
+  #       --format="value(vulnerability.effectiveSeverity)" | if grep -Fxq CRITICAL; \
+  #       then echo "❌ Client image failed vulnerability check (CRITICAL found)" && exit 1; \
+  #       else echo "✅ Client image passed vulnerability check (no CRITICAL issues)" && exit 0; fi
+  #   waitFor: ['scan-client']
 
   # Step 8: Check severity results for server image
-  - id: 'check-server-severity'
-    name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        echo "Checking server image vulnerabilities..."
-        gcloud artifacts docker images list-vulnerabilities $(cat /workspace/server_scan_id.txt) \
-        --format="value(vulnerability.effectiveSeverity)" | if grep -Fxq CRITICAL; \
-        then echo "❌ Server image failed vulnerability check (CRITICAL found)" && exit 1; \
-        else echo "✅ Server image passed vulnerability check (no CRITICAL issues)" && exit 0; fi
-    waitFor: ['scan-server']
+  # - id: 'check-server-severity'
+  #   name: 'gcr.io/cloud-builders/gcloud'
+  #   entrypoint: 'bash'
+  #   args:
+  #     - '-c'
+  #     - |
+  #       echo "Checking server image vulnerabilities..."
+  #       gcloud artifacts docker images list-vulnerabilities $(cat /workspace/server_scan_id.txt) \
+  #       --format="value(vulnerability.effectiveSeverity)" | if grep -Fxq CRITICAL; \
+  #       then echo "❌ Server image failed vulnerability check (CRITICAL found)" && exit 1; \
+  #       else echo "✅ Server image passed vulnerability check (no CRITICAL issues)" && exit 0; fi
+  #   waitFor: ['scan-server']
 
   # Step 9: Download client secret from Cloud Storage
   - name: 'gcr.io/cloud-builders/gsutil'
@@ -102,7 +102,7 @@ steps:
       - 'gs://chatverse-cloud-build-logs/secrets/client-secret.yaml'
       - './client-secret.yaml'
     id: 'download-client-secret'
-    waitFor: ['check-client-severity']
+    waitFor: ['push-server']
 
   # Step 10: Download server secret from Cloud Storage
   - name: 'gcr.io/cloud-builders/gsutil'
@@ -111,7 +111,7 @@ steps:
       - 'gs://chatverse-cloud-build-logs/secrets/server-secret.yaml'
       - './server-secret.yaml'
     id: 'download-server-secret'
-    waitFor: ['check-server-severity']
+    waitFor: ['push-server']
 
   # Step 11: Get GKE credentials
   - name: 'gcr.io/cloud-builders/gcloud'
