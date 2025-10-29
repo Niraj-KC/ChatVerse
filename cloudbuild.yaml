@@ -1,5 +1,5 @@
 steps:
-  # Step 1: Build and push client image
+  # Step 1: Build client image
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
@@ -12,7 +12,7 @@ steps:
       - './client'
     id: 'build-client'
 
-  # Step 2: Build and push server image
+  # Step 2: Build server image
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
@@ -27,34 +27,70 @@ steps:
 
   # Step 3: Push client image
   - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'push'
-      - 'asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/client:latest'
+    args: ['push', 'asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/client:latest']
     id: 'push-client'
     waitFor: ['build-client']
 
   # Step 4: Push server image
   - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'push'
-      - 'asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/server:latest'
+    args: ['push', 'asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/server:latest']
     id: 'push-server'
     waitFor: ['build-server']
 
-  # Step 5: Download client secret from Cloud Storage
-  - name: 'gcr.io/cloud-builders/gsutil'
+  # ⚡ Step 4.5: Security scan client image and block if >1 critical
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
     args:
-      - 'cp'
-      - 'gs://chatverse-cloud-build-logs/secrets/client-secret.yaml'
-      - './client-secret.yaml'
+      - '-c'
+      - |
+        echo "🔍 Scanning CLIENT image for vulnerabilities..."
+        gcloud artifacts docker images describe asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/client:latest \
+          --location=asia-south1 \
+          --format="value(discovery.vulnerability.discoverySummary.vulnerabilityCount.critical)" > critical_count.txt
+        CRITICAL=$(cat critical_count.txt)
+        echo "⚠️ Found $CRITICAL critical vulnerabilities in CLIENT image"
+        if [[ -z "$CRITICAL" ]]; then
+          echo "⚠️ No scan data yet — waiting for Cloud Security Scanner to process image..."
+        elif [[ "$CRITICAL" -gt 1 ]]; then
+          echo "❌ Build failed: More than 1 critical vulnerability found in CLIENT image"
+          exit 1
+        else
+          echo "✅ CLIENT image passed vulnerability check"
+        fi
+    id: 'scan-client'
+    waitFor: ['push-client']
+
+  # ⚡ Step 5.5: Security scan server image and block if >1 critical
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🔍 Scanning SERVER image for vulnerabilities..."
+        gcloud artifacts docker images describe asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/server:latest \
+          --location=asia-south1 \
+          --format="value(discovery.vulnerability.discoverySummary.vulnerabilityCount.critical)" > critical_count.txt
+        CRITICAL=$(cat critical_count.txt)
+        echo "⚠️ Found $CRITICAL critical vulnerabilities in SERVER image"
+        if [[ -z "$CRITICAL" ]]; then
+          echo "⚠️ No scan data yet — waiting for Cloud Security Scanner to process image..."
+        elif [[ "$CRITICAL" -gt 1 ]]; then
+          echo "❌ Build failed: More than 1 critical vulnerability found in SERVER image"
+          exit 1
+        else
+          echo "✅ SERVER image passed vulnerability check"
+        fi
+    id: 'scan-server'
+    waitFor: ['push-server']
+
+  # Step 5: Download client secret
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args: ['cp', 'gs://chatverse-cloud-build-logs/secrets/client-secret.yaml', './client-secret.yaml']
     id: 'download-client-secret'
 
-  # Step 6: Download server secret from Cloud Storage
+  # Step 6: Download server secret
   - name: 'gcr.io/cloud-builders/gsutil'
-    args:
-      - 'cp'
-      - 'gs://chatverse-cloud-build-logs/secrets/server-secret.yaml'
-      - './server-secret.yaml'
+    args: ['cp', 'gs://chatverse-cloud-build-logs/secrets/server-secret.yaml', './server-secret.yaml']
     id: 'download-server-secret'
 
   # Step 7: Get GKE credentials
@@ -63,103 +99,75 @@ steps:
       - 'container'
       - 'clusters'
       - 'get-credentials'
-      - 'chatverse-cluster'  # Replace with your cluster name
-      - '--region=asia-south1'  # Replace with your cluster region/zone
+      - 'chatverse-cluster'
+      - '--region=asia-south1'
       - '--project=chatverse-475306'
     id: 'get-gke-credentials'
     waitFor: ['-']
 
-  # Step 8: Create or update client secrets in GKE
+  # Step 8: Apply client secret
   - name: 'gcr.io/cloud-builders/kubectl'
-    args:
-      - 'apply'
-      - '-f'
-      - 'client-secret.yaml'
+    args: ['apply', '-f', 'client-secret.yaml']
     env:
       - 'CLOUDSDK_COMPUTE_REGION=asia-south1'
       - 'CLOUDSDK_CONTAINER_CLUSTER=chatverse-cluster'
     id: 'apply-client-secret'
     waitFor: ['get-gke-credentials', 'download-client-secret']
 
-  # Step 9: Create or update server secrets in GKE
+  # Step 9: Apply server secret
   - name: 'gcr.io/cloud-builders/kubectl'
-    args:
-      - 'apply'
-      - '-f'
-      - 'server-secret.yaml'
+    args: ['apply', '-f', 'server-secret.yaml']
     env:
       - 'CLOUDSDK_COMPUTE_REGION=asia-south1'
       - 'CLOUDSDK_CONTAINER_CLUSTER=chatverse-cluster'
     id: 'apply-server-secret'
     waitFor: ['get-gke-credentials', 'download-server-secret']
 
-  # Step 10: Deploy client to GKE
+  # Step 10: Deploy client
   - name: 'gcr.io/cloud-builders/kubectl'
-    args:
-      - 'apply'
-      - '-f'
-      - 'k8s/client-deployment.yaml'  # Adjust path if needed
+    args: ['apply', '-f', 'k8s/client-deployment.yaml']
     env:
       - 'CLOUDSDK_COMPUTE_REGION=asia-south1'
       - 'CLOUDSDK_CONTAINER_CLUSTER=chatverse-cluster'
     id: 'deploy-client'
-    waitFor: ['push-client', 'apply-client-secret']
+    waitFor: ['scan-client', 'apply-client-secret']
 
-  # Step 11: Deploy server to GKE
+  # Step 11: Deploy server
   - name: 'gcr.io/cloud-builders/kubectl'
-    args:
-      - 'apply'
-      - '-f'
-      - 'k8s/server-deployment.yaml'  # Adjust path if needed
+    args: ['apply', '-f', 'k8s/server-deployment.yaml']
     env:
       - 'CLOUDSDK_COMPUTE_REGION=asia-south1'
       - 'CLOUDSDK_CONTAINER_CLUSTER=chatverse-cluster'
     id: 'deploy-server'
-    waitFor: ['push-server', 'apply-server-secret']
+    waitFor: ['scan-server', 'apply-server-secret']
 
-  # Step 12: Wait for client rollout to complete
+  # Step 12: Wait for client rollout
   - name: 'gcr.io/cloud-builders/kubectl'
-    args:
-      - 'rollout'
-      - 'status'
-      - 'deployment/chatverse-client'
-      - '--timeout=5m'
+    args: ['rollout', 'status', 'deployment/chatverse-client', '--timeout=5m']
     env:
       - 'CLOUDSDK_COMPUTE_REGION=asia-south1'
       - 'CLOUDSDK_CONTAINER_CLUSTER=chatverse-cluster'
     id: 'rollout-client'
     waitFor: ['deploy-client']
 
-  # Step 13: Wait for server rollout to complete
+  # Step 13: Wait for server rollout
   - name: 'gcr.io/cloud-builders/kubectl'
-    args:
-      - 'rollout'
-      - 'status'
-      - 'deployment/chatverse-server'
-      - '--timeout=5m'
+    args: ['rollout', 'status', 'deployment/chatverse-server', '--timeout=5m']
     env:
       - 'CLOUDSDK_COMPUTE_REGION=asia-south1'
       - 'CLOUDSDK_CONTAINER_CLUSTER=chatverse-cluster'
     id: 'rollout-server'
     waitFor: ['deploy-server']
 
-# Images to be pushed to Artifact Registry
+# Images to push
 images:
   - 'asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/client:latest'
   - 'asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/client:$SHORT_SHA'
   - 'asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/server:latest'
   - 'asia-south1-docker.pkg.dev/chatverse-475306/chatverse-docker-repo/server:$SHORT_SHA'
 
-# Build timeout (default is 10 minutes)
 timeout: '1800s'
 
-# Options
 options:
-  machineType: 'N1_HIGHCPU_8'  # Use a more powerful machine for faster builds
+  machineType: 'N1_HIGHCPU_8'
   logging: CLOUD_LOGGING_ONLY
-  
-# Substitutions (optional - can be overridden in trigger)
-substitutions:
-  _CLUSTER_NAME: 'chatverse-cluster'
-  _CLUSTER_REGION: 'asia-south1'
-  _K8S_DEPLOYMENT_PATH: 'k8s'
